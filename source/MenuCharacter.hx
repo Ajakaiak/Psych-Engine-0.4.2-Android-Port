@@ -1,68 +1,85 @@
-package;
+pacote;
 
-import flixel.FlxSprite;
-import flixel.graphics.frames.FlxAtlasFrames;
-import openfl.utils.Assets;
-import haxe.Json;
-import haxe.format.JsonParser;
+importar flixel.FlxSprite;
+importar flixel.graphics.frames.FlxAtlasFrames;
+#if MODS_ALLOWED
+import sys.io.File;
+importar sys.FileSystem;
+#fim
+importar openfl.utils.Assets;
+importar haxe.Json;
+importar haxe.format.JsonParser;
 
 typedef MenuCharacterFile = {
-	var image:String;
-	var scale:Float;
+	var imagem:String;
+	var escala: Flutuante;
 	var position:Array<Int>;
 	var idle_anim:String;
 	var confirm_anim:String;
 }
 
-class MenuCharacter extends FlxSprite
+classe MenuCharacter estende FlxSprite
 {
-	public var character:String;
+	public var caractere:String;
 	private static var DEFAULT_CHARACTER:String = 'bf';
 
-	public function new(x:Float, character:String = 'bf')
+	função pública new(x:Float, caractere:String = 'bf')
 	{
 		super(x);
 
-		changeCharacter(character);
+		changeCharacter(caractere);
 	}
 
-	public function changeCharacter(?character:String = 'bf') {
-		if(character == null) character = '';
+	função pública changeCharacter(?character:String = 'bf') {
+		if(caracter == null) caractere = '';
 		if(character == this.character) return;
 
-		this.character = character;
+		this.character = caractere;
 		antialiasing = ClientPrefs.globalAntialiasing;
-		visible = true;
+		visível = verdadeiro;
 
 		var dontPlayAnim:Bool = false;
-		scale.set(1, 1);
-		updateHitbox();
+		escala.set(1, 1);
+		atualizarHitbox();
 
-		switch(character) {
-			case '':
-				visible = false;
-				dontPlayAnim = true;
-			default:
+		switch(caractere) {
+			caso '':
+				visível = falso;
+				nãoPlayAnim = true;
+			padrão:
 				var characterPath:String = 'images/menucharacters/' + character + '.json';
 				var rawJson = null;
 
-				var path:String = Paths.getPreloadPath(characterPath);
-				if(!Assets.exists(path)) {
-					path = Paths.getPreloadPath('images/menucharacters/' + DEFAULT_CHARACTER + '.json');
+				#if MODS_ALLOWED
+				var path:String = Paths.modFolders(characterPath);
+				if (!FileSystem.exists(caminho)) {
+					caminho = Paths.getPreloadPath(characterPath);
 				}
-				rawJson = Assets.getText(path);
+
+				if(!FileSystem.exists(caminho)) {
+					caminho = Paths.getPreloadPath('images/menucharacters/' + DEFAULT_CHARACTER + '.json');
+				}
+				rawJson = File.getContent(path);
+
+				#senão
+				var path:String = Paths.getPreloadPath(characterPath);
+				if(!Ativos.exists(caminho)) {
+					caminho = Paths.getPreloadPath('images/menucharacters/' + DEFAULT_CHARACTER + '.json');
+				}
+				rawJson = Assets.getText(caminho);
+				#fim
 				
 				var charFile:MenuCharacterFile = cast Json.parse(rawJson);
 				frames = Paths.getSparrowAtlas('menucharacters/' + charFile.image);
-				animation.addByPrefix('idle', charFile.idle_anim, 24);
+				animação.addByPrefix('idle', charFile.idle_anim, 24);
 				animation.addByPrefix('confirm', charFile.confirm_anim, 24, false);
 
 				if(charFile.scale != 1) {
 					scale.set(charFile.scale, charFile.scale);
-					updateHitbox();
+					atualizarHitbox();
 				}
 				offset.set(charFile.position[0], charFile.position[1]);
-				animation.play('idle');
+				animação.play('idle');
 		}
 	}
 }
